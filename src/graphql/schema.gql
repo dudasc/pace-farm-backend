@@ -2,7 +2,7 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type UserModel {
+type UserEntity {
   id: ID!
   name: String!
   email: String!
@@ -17,33 +17,39 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type LoginResponseDto {
+  access_token: String!
+  user: UserEntity!
+}
+
 type Query {
-  helloWorld(id: String!): String!
-  users: [UserModel!]!
-  user(id: Float!): UserModel!
+  helloWorld: String!
+  users: [UserEntity!]!
+  users2(id: Int!): UserEntity!
 }
 
 type Mutation {
-  createUser(data: CreateUserDto!): UserModel!
-  updateUser(data: UpdateUserDto!): UserModel!
-  deleteUser(id: Float!): UserModel!
-  login(loginDto: LoginDto!): UserModel!
+  createUser(createUserInput: CreateUserInput!): UserEntity!
+  updateUser(updateUserInput: UpdateUserInput!): UserEntity!
+  removeUser(id: Int!): UserEntity!
+  login(loginInput: LoginInput!): LoginResponseDto!
+  forgotPassword(email: String!): String!
 }
 
-input CreateUserDto {
+input CreateUserInput {
   name: String!
   email: String!
   password: String!
 }
 
-input UpdateUserDto {
-  id: ID!
-  name: String!
-  email: String!
-  password: String!
+input UpdateUserInput {
+  name: String
+  email: String
+  password: String
+  id: Int!
 }
 
-input LoginDto {
+input LoginInput {
   email: String!
   password: String!
 }

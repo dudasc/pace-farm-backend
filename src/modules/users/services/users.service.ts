@@ -1,20 +1,25 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/services/prisma.service';
-import { User } from '@prisma/client';
-import { CreateUserDto } from '../dtos/create-user.dto';
-import { UpdateUserDto } from '../dtos/update-user.dto';
 import hashPassword from 'src/shared/utils/hash-password';
-import { UserModel } from '../models/user.model';
+import { CreateUserInput } from '../dto/create-user.input';
+import { UpdateUserInput } from '../dto/update-user.input';
+import { UserEntity } from '../entities/user.entity';
 
 @Injectable()
 export class UsersService {
   public constructor(private prismaService: PrismaService) { }
 
-  async findAll(): Promise<any[]> {
+  async create(createUserInput: CreateUserInput) {
+    createUserInput.password = await hashPassword(createUserInput.password)
+
+    return await this.prismaService.user.create({ data: createUserInput });
+  }
+
+  findAll() {
     return this.prismaService.user.findMany();
   }
 
-  async findOne(id: number): Promise<UserModel> {
+  async findOne(id: number) {
     const user = await this.prismaService.user.findFirst({
       where: {
         id: +id, deletedAt: null
@@ -28,16 +33,10 @@ export class UsersService {
     return user;
   }
 
-  async create(data: CreateUserDto): Promise<UserModel> {
-    data.password = await hashPassword(data.password)
-
-    return await this.prismaService.user.create({ data });
-  }
-
-  async update(data: UpdateUserDto): Promise<UserModel> {
+  async update(updateUserInput: UpdateUserInput) {
     const user = await this.prismaService.user.findFirst({
       where: {
-        id: +data.id,
+        id: +updateUserInput.id,
         deletedAt: null
       }
     });
@@ -46,22 +45,22 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    if (data.password) {
-      data.password = await hashPassword(data.password)
+    if (updateUserInput.password) {
+      updateUserInput.password = await hashPassword(updateUserInput.password)
     }
 
-    console.log(data.password);
+    console.log(updateUserInput.password);
 
     const where: any = {
-      id: +data.id
+      id: +updateUserInput.id
     };
 
-    delete data.id;
+    delete updateUserInput.id;
 
-    return await this.prismaService.user.update({ where, data });
+    return await this.prismaService.user.update({ where, data: updateUserInput });
   }
 
-  async delete(id: number): Promise<UserModel> {
+  async remove(id: number) {
     const user = await this.prismaService.user.delete({
       where: {
         id: +id
@@ -75,7 +74,7 @@ export class UsersService {
     return user;
   }
 
-  async findByEmail(email: string): Promise<UserModel> {
+  async findByEmail(email: string): Promise<UserEntity> {
     const user = await this.prismaService.user.findFirst({
       where: { email, deletedAt: null }
     });
